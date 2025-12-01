@@ -1,0 +1,579 @@
+<!DOCTYPE html><!-- last published ~ Mon Dec 1 2025 12:28:39 GMT+0800 -->
+<html>
+<head>
+    <title>Dino Rip-Off Game</title>
+    
+    <!-- favicon -->
+    <link rel="icon" type="image/svg+xml" href="https://911.so/assets/Favicon.svg">
+
+    <!-- open graph -->
+    <meta property="og:title" content="Dinosaur Rip-Off Game">
+    <meta property="og:description" content="Existing since December 1st, 2025.">
+    <meta property="og:image" content="https://cdn.discordapp.com/attachments/1364867071703384075/1444906732404084786/Banner.png?ex=692e69c2&is=692d1842&hm=22f53ff520a6f9a4fb9f445ce7daf94ef8bbb19a0869cb7ea8b0ed8f31c63fe6">
+    <meta property="og:type" content="website">
+
+    <!-- twitter card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Dinosaur Rip-Off Game">
+    <meta name="twitter:description" content="Existing since December 1st, 2025.">
+    <meta name="twitter:image" content="https://cdn.discordapp.com/attachments/1364867071703384075/1444906732404084786/Banner.png?ex=692e69c2&is=692d1842&hm=22f53ff520a6f9a4fb9f445ce7daf94ef8bbb19a0869cb7ea8b0ed8f31c63fe6">
+
+    <style>
+        /* ofc its my fav lausanne font */
+        @font-face {
+            font-family: 'Lausanne';
+            src: url('/fonts/Lausanne-300.woff2') format('woff2'),
+                 url('/fonts/Lausanne-300.woff') format('woff');
+            font-weight: 300;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Lausanne';
+            src: url('/fonts/Lausanne-500.woff2') format('woff2'),
+                 url('/fonts/Lausanne-500.woff') format('woff');
+            font-weight: 500;
+            font-style: normal;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f7f7f7;
+            font-family: 'Lausanne', sans-serif;
+            font-weight: 300;
+        }
+        #gameContainer {
+            text-align: center;
+        }
+        #scoreContainer {
+            display: flex;
+            justify-content: space-between;
+            width: 800px;
+            margin-bottom: 10px;
+        }
+        #score, #bestScore {
+            font-size: 20px;
+            font-weight: 500;
+            color: #535353;
+        }
+        canvas {
+            border: 2px solid #535353;
+            background: #fff;
+        }
+        #instructions {
+            margin-top: 10px;
+            color: #535353;
+            font-size: 14px;
+            font-weight: 300;
+        }
+        #leaderboard {
+            margin-top: 20px;
+            background: #fff;
+            border: 2px solid #535353;
+            padding: 15px;
+            width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #leaderboard h3 {
+            color: #535353;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #535353;
+            padding-bottom: 5px;
+            font-weight: 500;
+        }
+        #leaderboard ol {
+            text-align: left;
+            padding-left: 25px;
+        }
+        #leaderboard li {
+            color: #535353;
+            padding: 5px 0;
+            font-size: 14px;
+            font-weight: 300;
+        }
+        #leaderboard li span {
+            float: right;
+            font-weight: 500;
+        }
+        #nameModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        #nameModal.show { display: flex; }
+        #nameModal .modal-content {
+            background: #fff;
+            padding: 30px;
+            border: 3px solid #535353;
+            text-align: center;
+        }
+        #nameModal h2 {
+            font-weight: 500;
+        }
+        #nameModal p {
+            font-weight: 300;
+        }
+        #nameModal input {
+            font-family: 'Lausanne', sans-serif;
+            font-size: 18px;
+            font-weight: 300;
+            padding: 10px;
+            border: 2px solid #535353;
+            margin: 15px 0;
+            width: 200px;
+            text-align: center;
+        }
+        #nameModal button {
+            font-family: 'Lausanne', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            padding: 10px 30px;
+            background: #535353;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            margin: 5px;
+        }
+        #nameModal button:hover { background: #333; }
+        .highlight { background: #ffffd0 !important; }
+        #status {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+            font-weight: 300;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="scoreContainer">
+            <div id="score">score ~ 0</div>
+            <div id="bestScore">best ~ 0</div>
+        </div>
+        <canvas id="game" width="800" height="200"></canvas>
+        <div id="instructions">press space or click 2 jump vrochacho</div>
+
+        <div id="leaderboard">
+            <h3>global leaderboard</h3>
+            <ol id="leaderboardList">
+                <li>connecting to server...</li>
+            </ol>
+            <div id="status"></div>
+        </div>
+    </div>
+
+    <!-- name input modal (only shown first time) -->
+    <div id="nameModal">
+        <div class="modal-content">
+            <h2>welcome</h2>
+            <p>enter your name to save scores ~ </p>
+            <input type="text" id="playerName" placeholder="Enter your name" maxlength="15">
+            <br>
+            <button id="submitBtn" onclick="saveName()">start playing</button>
+        </div>
+    </div>
+
+    <script type="module">
+
+        // firebase configuration
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, deleteDoc, doc, where } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB0JnEZJDTPth8zTWnX3yu-7TJCNMa_n-8",
+            authDomain: "dinosaur-rip-off-game.firebaseapp.com",
+            projectId: "dinosaur-rip-off-game",
+            storageBucket: "dinosaur-rip-off-game.firebasestorage.app",
+            messagingSenderId: "21190174916",
+            appId: "1:21190174916:web:5aeccd60972a64a54e4191",
+            measurementId: "G-FT70C67BJ7"
+        };
+
+        // initialize firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        console.log("firebase initialized successfully!");
+        document.getElementById('status').textContent = "connected";
+
+        // player data storage
+        const NAME_KEY = 'dinoGamePlayerName';
+        const BEST_SCORE_KEY = 'dinoGameBestScore';
+        const FIREBASE_DOC_KEY = 'dinoGameFirebaseDocId';
+
+        function getSavedName() {
+            return localStorage.getItem(NAME_KEY) || '';
+        }
+
+        function savePlayerName(name) {
+            localStorage.setItem(NAME_KEY, name);
+        }
+
+        function getBestScore() {
+            return parseInt(localStorage.getItem(BEST_SCORE_KEY) || '0');
+        }
+
+        function saveBestScore(score) {
+            localStorage.setItem(BEST_SCORE_KEY, score.toString());
+            document.getElementById('bestScore').textContent = 'best ~ ' + score;
+        }
+
+        function getFirebaseDocId() {
+            return localStorage.getItem(FIREBASE_DOC_KEY) || '';
+        }
+
+        function saveFirebaseDocId(id) {
+            localStorage.setItem(FIREBASE_DOC_KEY, id);
+        }
+
+        // checks if first time player
+        function checkFirstTime() {
+            if (!getSavedName()) {
+                document.getElementById('nameModal').classList.add('show');
+                document.getElementById('playerName').focus();
+            }
+        }
+
+        window.saveName = function() {
+            const name = document.getElementById('playerName').value.trim() || 'Anonymous';
+            savePlayerName(name);
+            document.getElementById('nameModal').classList.remove('show');
+        }
+
+        // handle enter key
+        document.getElementById('playerName').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') window.saveName();
+        });
+
+        // leaderboard functions
+        const LEADERBOARD_SIZE = 10;
+        let leaderboardData = [];
+
+        async function loadLeaderboard() {
+            const list = document.getElementById('leaderboardList');
+
+            try {
+                const q = query(
+                    collection(db, 'leaderboard'),
+                    orderBy('score', 'desc'),
+                    limit(LEADERBOARD_SIZE)
+                );
+
+                const snapshot = await getDocs(q);
+                leaderboardData = [];
+                snapshot.forEach(doc => {
+                    leaderboardData.push({ id: doc.id, ...doc.data() });
+                });
+                renderLeaderboard();
+            } catch (e) {
+                list.innerHTML = '<li>Error loading leaderboard</li>';
+                document.getElementById('status').textContent = "⚠ " + e.message;
+                console.error("Firestore error:", e);
+            }
+        }
+
+        function renderLeaderboard(highlightName = null) {
+            const list = document.getElementById('leaderboardList');
+
+            if (leaderboardData.length === 0) {
+                list.innerHTML = '<li>No scores yet. Be the first!</li>';
+                return;
+            }
+
+            list.innerHTML = leaderboardData.map((entry) => {
+                const isHighlight = highlightName && entry.name === highlightName;
+                return `<li class="${isHighlight ? 'highlight' : ''}">${entry.name} <span>${entry.score}</span></li>`;
+            }).join('');
+        }
+
+        // auto-submit best score to firebase
+        async function submitBestScore(score) {
+            const name = getSavedName();
+            if (!name) return;
+
+            const existingDocId = getFirebaseDocId();
+
+            try {
+                // delete old entry if exists
+                if (existingDocId) {
+                    try {
+                        await deleteDoc(doc(db, 'leaderboard', existingDocId));
+                    } catch (e) {
+                        console.log("Old doc not found, creating new");
+                    }
+                }
+
+                // add new best score
+                const docRef = await addDoc(collection(db, 'leaderboard'), {
+                    name: name,
+                    score: score,
+                    date: new Date().toISOString()
+                });
+
+                // save doc ID for future updates
+                saveFirebaseDocId(docRef.id);
+
+                console.log("✅ Best score auto-saved:", name, score);
+                document.getElementById('status').textContent = "✓ Score saved!";
+
+                // cleanup ~ keep only top scores
+                const allScores = query(
+                    collection(db, 'leaderboard'),
+                    orderBy('score', 'desc')
+                );
+                const snapshot = await getDocs(allScores);
+                const docs = snapshot.docs;
+
+                if (docs.length > LEADERBOARD_SIZE) {
+                    const toDelete = docs.slice(LEADERBOARD_SIZE);
+                    for (const docSnap of toDelete) {
+                        await deleteDoc(doc(db, 'leaderboard', docSnap.id));
+                    }
+                }
+
+                await loadLeaderboard();
+                renderLeaderboard(name);
+
+            } catch (e) {
+                console.error("Error auto-saving score:", e);
+                document.getElementById('status').textContent = "⚠ Save failed";
+            }
+        }
+
+        // secret sauce
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score');
+        const bestScoreDisplay = document.getElementById('bestScore');
+
+        let score = 0;
+        let gameOver = false;
+        let gameStarted = false;
+        let groundY = 160;
+
+        // initialize best score display
+        bestScoreDisplay.textContent = 'best ~ ' + getBestScore();
+
+        const dino = {
+            x: 50,
+            y: groundY,
+            width: 40,
+            height: 50,
+            velocityY: 0,
+            gravity: 0.6,
+            jumpForce: -12,
+            isJumping: false,
+
+            draw() {
+                ctx.fillStyle = '#535353';
+                ctx.fillRect(this.x, this.y - this.height, this.width, this.height);
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(this.x + 25, this.y - this.height + 8, 8, 8);
+                ctx.fillStyle = '#535353';
+                if (Math.floor(Date.now() / 100) % 2 === 0 && !this.isJumping) {
+                    ctx.fillRect(this.x + 5, this.y, 8, 10);
+                    ctx.fillRect(this.x + 22, this.y, 8, 10);
+                } else {
+                    ctx.fillRect(this.x + 10, this.y, 8, 10);
+                    ctx.fillRect(this.x + 27, this.y, 8, 10);
+                }
+            },
+
+            jump() {
+                if (!this.isJumping) {
+                    this.velocityY = this.jumpForce;
+                    this.isJumping = true;
+                }
+            },
+
+            update() {
+                this.velocityY += this.gravity;
+                this.y += this.velocityY;
+                if (this.y >= groundY) {
+                    this.y = groundY;
+                    this.velocityY = 0;
+                    this.isJumping = false;
+                }
+            }
+        };
+
+        let obstacles = [];
+        let obstacleTimer = 0;
+        let obstacleInterval = 120;
+        let gameSpeed = 3;
+        const MAX_SPEED = 8;
+
+        function spawnObstacle() {
+            const height = 30 + Math.random() * 25;
+            obstacles.push({
+                x: canvas.width,
+                y: groundY,
+                width: 20 + Math.random() * 12,
+                height: height
+            });
+        }
+
+        function drawObstacles() {
+            ctx.fillStyle = '#535353';
+            obstacles.forEach(obs => {
+                ctx.fillRect(obs.x, obs.y - obs.height, obs.width, obs.height);
+                ctx.fillRect(obs.x - 8, obs.y - obs.height + 15, 8, 20);
+                ctx.fillRect(obs.x + obs.width, obs.y - obs.height + 10, 8, 25);
+            });
+        }
+
+        function updateObstacles() {
+            obstacles.forEach(obs => { obs.x -= gameSpeed; });
+            obstacles = obstacles.filter(obs => obs.x + obs.width > 0);
+            obstacleTimer++;
+            if (obstacleTimer >= obstacleInterval) {
+                spawnObstacle();
+                obstacleTimer = 0;
+                obstacleInterval = 80 + Math.random() * 80;
+            }
+        }
+
+        function checkCollision() {
+            for (let obs of obstacles) {
+                if (dino.x < obs.x + obs.width &&
+                    dino.x + dino.width > obs.x &&
+                    dino.y > obs.y - obs.height &&
+                    dino.y - dino.height < obs.y) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function drawGround() {
+            ctx.fillStyle = '#535353';
+            ctx.fillRect(0, groundY + 10, canvas.width, 2);
+            for (let i = 0; i < canvas.width; i += 20) {
+                if (Math.random() > 0.7) {
+                    ctx.fillRect(i, groundY + 15, 3, 2);
+                }
+            }
+        }
+
+        function handleGameOver() {
+            const finalScore = Math.floor(score / 10);
+            const currentBest = getBestScore();
+
+            // check if new best score
+            if (finalScore > currentBest) {
+                saveBestScore(finalScore);
+                submitBestScore(finalScore);
+            }
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (!gameStarted) {
+                drawGround();
+                dino.draw();
+                ctx.fillStyle = '#535353';
+                ctx.font = '500 20px Lausanne, sans-serif';
+                ctx.fillText('press space 2 start', canvas.width/2 - 110, 100);
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+
+            if (gameOver) {
+                drawGround();
+                drawObstacles();
+                dino.draw();
+                ctx.fillStyle = '#535353';
+                ctx.font = '500 24px Lausanne, sans-serif';
+                ctx.fillText('u died', canvas.width/2 - 70, 80);
+                ctx.font = '300 16px Lausanne, sans-serif';
+                ctx.fillText('press space 2 start', canvas.width/2 - 100, 110);
+
+                // show new best if applicable
+                const finalScore = Math.floor(score / 10);
+                if (finalScore >= getBestScore() && finalScore > 0) {
+                    ctx.fillStyle = '#4CAF50';
+                    ctx.font = '500 16px Lausanne, sans-serif';
+                    ctx.fillText('🎉 NEW BEST!', canvas.width/2 - 55, 140);
+                }
+                return;
+            }
+
+            dino.update();
+            updateObstacles();
+
+            if (score % 1000 === 0 && score > 0) {
+                gameSpeed = Math.min(gameSpeed + 0.0005, MAX_SPEED);
+            }
+
+            if (checkCollision()) {
+                gameOver = true;
+                handleGameOver();
+            }
+
+            score++;
+            scoreDisplay.textContent = 'Score: ' + Math.floor(score / 10);
+
+            drawGround();
+            drawObstacles();
+            dino.draw();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function resetGame() {
+            score = 0;
+            gameOver = false;
+            gameSpeed = 3;
+            obstacles = [];
+            obstacleTimer = 0;
+            dino.y = groundY;
+            dino.velocityY = 0;
+            dino.isJumping = false;
+            document.getElementById('status').textContent = "connected";
+            gameLoop();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (document.getElementById('nameModal').classList.contains('show')) return;
+                if (!gameStarted) {
+                    gameStarted = true;
+                    gameLoop();
+                } else if (gameOver) {
+                    resetGame();
+                } else {
+                    dino.jump();
+                }
+            }
+        });
+
+        canvas.addEventListener('click', () => {
+            if (document.getElementById('nameModal').classList.contains('show')) return;
+            if (!gameStarted) {
+                gameStarted = true;
+                gameLoop();
+            } else if (gameOver) {
+                resetGame();
+            } else {
+                dino.jump();
+            }
+        });
+
+        // initialize
+        checkFirstTime();
+        loadLeaderboard();
+        gameLoop();
+    </script>
+</body>
+</html>
